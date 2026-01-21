@@ -11,6 +11,13 @@ const CATEGORIES = {
     expense: ['食費', '日用品', '住居費', '光熱費', '通信費', '交通費', '交際費', '娯楽', '美容・衣服', '医療', 'その他']
 };
 
+const QUICK_ITEMS = [
+    { label: '家賃', amount: 65000, category: '住居費', note: '家賃固定費', type: 'expense' },
+    { label: 'サブスク', amount: 1100, category: '娯楽', note: '定額サービス', type: 'expense' },
+    { label: '水道光熱', amount: 12000, category: '光熱費', note: '月次目安', type: 'expense' },
+    { label: '給与', amount: 250000, category: '給与', note: '本業', type: 'income' },
+] as const;
+
 export const TransactionForm: React.FC<Props> = ({ onAdd }) => {
     const [type, setType] = useState<TransactionType>('expense');
     const [amount, setAmount] = useState('');
@@ -18,13 +25,33 @@ export const TransactionForm: React.FC<Props> = ({ onAdd }) => {
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [note, setNote] = useState('');
 
+    const evaluateFormula = (input: string) => {
+        try {
+            // 安全な計算: 数字と演算子のみ許可
+            if (!/^[0-9+\-*/.() ]+$/.test(input)) return input;
+            // eslint-disable-next-line no-new-func
+            const result = new Function(`return ${input}`)();
+            return isFinite(result) ? String(Math.round(result)) : input;
+        } catch {
+            return input;
+        }
+    };
+
+    const handleAmountKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && /[+\-*/]/.test(amount)) {
+            e.preventDefault();
+            setAmount(evaluateFormula(amount));
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!amount || isNaN(Number(amount))) return;
+        const finalAmount = evaluateFormula(amount);
+        if (!finalAmount || isNaN(Number(finalAmount))) return;
 
         onAdd({
             type,
-            amount: Number(amount),
+            amount: Number(finalAmount),
             category,
             date,
             note
@@ -32,6 +59,13 @@ export const TransactionForm: React.FC<Props> = ({ onAdd }) => {
 
         setAmount('');
         setNote('');
+    };
+
+    const handleQuickAdd = (item: typeof QUICK_ITEMS[number]) => {
+        setType(item.type);
+        setAmount(String(item.amount));
+        setCategory(item.category);
+        setNote(item.note);
     };
 
     const handleTypeChange = (newType: TransactionType) => {
@@ -42,6 +76,21 @@ export const TransactionForm: React.FC<Props> = ({ onAdd }) => {
     return (
         <div className="card form-container">
             <h3>新規登録</h3>
+
+            <div className="quick-actions">
+                <div className="quick-actions-title">クイック登録</div>
+                {QUICK_ITEMS.map((item) => (
+                    <button
+                        key={item.label}
+                        type="button"
+                        className="quick-btn"
+                        onClick={() => handleQuickAdd(item)}
+                    >
+                        {item.label}
+                    </button>
+                ))}
+            </div>
+
             <form onSubmit={handleSubmit}>
                 <div className="type-selector">
                     <button
@@ -61,12 +110,13 @@ export const TransactionForm: React.FC<Props> = ({ onAdd }) => {
                 </div>
 
                 <div className="form-group">
-                    <label>金額</label>
+                    <label>金額 {amount.match(/[+\-*/]/) && <small>(Enterで計算)</small>}</label>
                     <input
-                        type="number"
+                        type="text"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
-                        placeholder="0"
+                        onKeyDown={handleAmountKeyDown}
+                        placeholder="0 (例: 1200+500)"
                         required
                     />
                 </div>
@@ -100,7 +150,7 @@ export const TransactionForm: React.FC<Props> = ({ onAdd }) => {
                     />
                 </div>
 
-                <button type="submit" className="submit-btn">登録する</button>
+                <button type="submit" className="submit-btn" disabled={!amount}>登録する</button>
             </form>
         </div>
     );
