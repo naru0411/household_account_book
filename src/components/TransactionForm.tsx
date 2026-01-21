@@ -12,10 +12,10 @@ const CATEGORIES = {
 };
 
 const QUICK_ITEMS = [
-    { label: '家賃', amount: 65000, category: '住居費', note: '家賃固定費', type: 'expense' },
-    { label: 'サブスク', amount: 1100, category: '娯楽', note: '定額サービス', type: 'expense' },
-    { label: '水道光熱', amount: 12000, category: '光熱費', note: '月次目安', type: 'expense' },
-    { label: '給与', amount: 250000, category: '給与', note: '本業', type: 'income' },
+    { label: '家賃', amount: 33000, category: '住居費', note: '家賃固定費', type: 'expense' },
+    { label: 'サブスク', amount: 550, category: '娯楽', note: '定額サービス', type: 'expense' },
+    { label: '水道光熱', amount: 15000, category: '光熱費', note: '月次目安', type: 'expense' },
+    { label: '給与', amount: 20000, category: '給与', note: '本業', type: 'income' },
 ] as const;
 
 export const TransactionForm: React.FC<Props> = ({ onAdd }) => {
